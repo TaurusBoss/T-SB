@@ -12,7 +12,7 @@ const createWindow = () => {
     width: 1200,
     height: 720,
     webPreferences: {
-      preload: path.join(__dirname, 'keyloader.js'),
+      preload: path.join(__dirname, 'renderer.js'),
     }
   });
 
@@ -29,9 +29,7 @@ app.whenReady().then(() => {
     const keyName = e.rawKey._nameRaw;
     console.log(`${e.name} ${e.state == "DOWN" ? "DOWN" : "UP  "} [${e.rawKey._nameRaw}]`);
     const pressedKeys = {keyName: keyName, down: e.state};
-
-    // Emit the updated pressedKeys object to the renderer process
-    console.log(pressedKeys)
+    //console.log(pressedKeys)
     win.webContents.send('handle-keypress', pressedKeys);
   });
 });
@@ -44,7 +42,9 @@ app.on('window-all-closed', () => {
 async function GetSettings(settingsName) {
   try {
     const data = fs.readFileSync(path.join(__dirname, 'appsettings.json'), 'utf8');
+    const keymap = fs.readFileSync(path.join(__dirname, 'keymaps.json'), 'utf8');
     context = JSON.parse(data)[settingsName];
+    context.keymap = JSON.parse(keymap)[context.default_keymap];
   } catch (error) {
     console.error('Error reading file:', error);
   }
