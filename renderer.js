@@ -57,3 +57,13 @@ function selectKey(e) {
         $("#keymap-selection").html(`Key: ${e.target.innerText}<br>ID: ${e.target.id}`)
     }
 }
+
+function declareListener(id, audioFilePath) {
+    context.keymaps[context.default_keymap][id] = {
+        path: audioFilePath,
+        T_start: 0,
+        T_end: 0,
+        fileExtension: audioFilePath.split(".").pop()
+    }
+    ipcRenderer.send('keymap-refresh', context.keymaps)
+}
