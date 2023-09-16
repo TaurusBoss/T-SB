@@ -33,6 +33,9 @@ app.whenReady().then(() => {
     //console.log(pressedKeys)
     win.webContents.send('handle-keypress', pressedKeys);
   });
+  win.webContents.on('keymap-refresh', keymaps => {
+    fs.writeFileSync(path.join(__dirname, 'keymaps.json'), keymaps);
+  })
 });
 
 app.on('window-all-closed', () => {
@@ -43,9 +46,9 @@ app.on('window-all-closed', () => {
 async function GetSettings(settingsName) {
   try {
     const data = fs.readFileSync(path.join(__dirname, 'appsettings.json'), 'utf8');
-    const keymap = fs.readFileSync(path.join(__dirname, 'keymaps.json'), 'utf8');
+    const keymaps = fs.readFileSync(path.join(__dirname, 'keymaps.json'), 'utf8');
     context = JSON.parse(data)[settingsName];
-    context.keymap = JSON.parse(keymap)[context.default_keymap];
+    context.keymaps = JSON.parse(keymaps);
   } catch (error) {
     console.error('Error reading file:', error);
   }
