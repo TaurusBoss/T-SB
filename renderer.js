@@ -10,6 +10,8 @@ window.addEventListener("DOMContentLoaded", () => {
     ipcRenderer.on('handle-keypress', (e, pressedKey) => {
         handleKeyPress(pressedKey.keyName, pressedKey.down == "DOWN" ? true : false)
       });
+    const $ = require('jquery');
+    window.$ = window.jQuery = $;
 });
 
 function createKeyboard(keySet) {
@@ -43,25 +45,9 @@ function audioPlayer(pathOfAudioFile) {
 
 function selectKey(e) {
     console.log(e.target)
-    const previousKey = document.querySelector('.selected');
-    if(previousKey) {
-        previousKey.classList.remove("selected")
-    }
-    const key = document.querySelector(`#${e.target.id}`);
-    if (key.classList.contains("selected")){
-        key.classList.remove("selected")
-        selection.innerHTML = "No selected key.";
-    }
+    if($(`#${e.target.id}`).hasClass("selected")) $(`#${e.target.id}`).removeClass("selected");
     else {
-        key.classList.add("selected")
-        const container = document.querySelector("#keymap-selection")
-        const previousSelection = document.querySelector("#selection")
-        console.log(previousSelection)
-        container.removeChild(previousSelection)
-        const selection = document.createElement("p")
-        selection.id = "selection"
-        selection.innerHTML = `Selected key: ${e.target.innerText}<br>and its ID is ${e.target.id}`
-        container.appendChild(selection); 
+        $(".selected").removeClass("selected")
+        $(`#${e.target.id}`).addClass("selected")
     }
-    
 }
