@@ -10,7 +10,8 @@
   "author": "Szova Kristof",
   "license": "ISC",
   "devDependencies": {
-    "electron": "^26.2.1"
+    "electron": "^26.2.1",
+    "electron-reloader": "^1.2.3"
   },
   "dependencies": {
     "jquery": "^3.7.1",

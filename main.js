@@ -4,6 +4,9 @@ const EventEmitter = require('events');
 const { app, BrowserWindow } = require('electron');
 const fs = require("fs");
 const path = require('path');
+try {
+  require('electron-reloader')(module)
+} catch (_) {}
 let win;
 let context = {};
 
