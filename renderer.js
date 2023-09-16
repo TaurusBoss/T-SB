@@ -45,9 +45,15 @@ function audioPlayer(pathOfAudioFile) {
 
 function selectKey(e) {
     console.log(e.target)
-    if($(`#${e.target.id}`).hasClass("selected")) $(`#${e.target.id}`).removeClass("selected");
+    //Client clicks on an already selected key.
+    if($(`#${e.target.id}`).hasClass("selected")){
+        $(`#${e.target.id}`).removeClass("selected");
+        $("#keymap-selection").html("No selected key.")
+    } 
+    //Client clicks on a key not selected ATM.
     else {
         $(".selected").removeClass("selected")
         $(`#${e.target.id}`).addClass("selected")
+        $("#keymap-selection").html(`Key: ${e.target.innerText}<br>ID: ${e.target.id}`)
     }
 }
