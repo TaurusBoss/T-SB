@@ -41,7 +41,7 @@ app.whenReady().then(() => {
   ipcMain.on('keymap-refresh', keymaps => {
     fs.writeFileSync(path.join(__dirname, 'keymaps.json'), keymaps);
   })
-  ipcMain.on('open-browser', event => {
+  ipcMain.on('open-browser', (e, details) => {
     dialog.showOpenDialog({
       defaultPath: context.sounds_dir,
       properties: ['openFile'],
@@ -49,10 +49,9 @@ app.whenReady().then(() => {
         { name: 'Audio files', extensions: ['mp3'] },
       ]
     }).then(file => {
-      console.log(file.canceled)
       if (!file.canceled) {
         const filePath = file.filePaths[0].toString()
-        win.webContents.send('add-sound', {filePath: filePath})
+        win.webContents.send('add-sound', {keyID: details.keyID, filePath: filePath})
       }
     })
   })

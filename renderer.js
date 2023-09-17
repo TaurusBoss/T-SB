@@ -17,7 +17,7 @@ window.addEventListener("DOMContentLoaded", () => {
         handleAddSound(details)
       });
       document.querySelector('#add-sound').addEventListener('click', function (event) {
-        ipcRenderer.send('open-browser', context.keymaps)
+        ipcRenderer.send('open-browser', {keymaps: context.keymaps, keyID: $('#keymap-selection').attr("key")})
     });
 });
 
@@ -55,13 +55,17 @@ function selectKey(e) {
     //Client clicks on an already selected key.
     if($(`#${e.target.id}`).hasClass("selected")){
         $(`#${e.target.id}`).removeClass("selected");
-        $("#keymap-selection").html("No selected key.")
+        $("#keymap-selection").attr("key", "none")
+        $("#keymap-selection").toggleClass("key-selected", false);
+        $("#description").html("No selected key.")
     } 
     //Client clicks on a key not selected ATM.
     else {
         $(".selected").removeClass("selected")
         $(`#${e.target.id}`).addClass("selected")
-        $("#keymap-selection").html(`Key: ${e.target.innerText}<br>ID: ${e.target.id}`)
+        $("#keymap-selection").attr("key", e.target.id);
+        $("#keymap-selection").toggleClass("key-selected", true);
+        $("#description").html(`Key: ${e.target.innerText}<br>ID: ${e.target.id}`)
     }
 }
 
@@ -77,4 +81,5 @@ function declareListener(id, audioFilePath) {
 
 function handleAddSound(details) {
     console.log(details.filePath)
+    console.log(details.keyID)
 }
