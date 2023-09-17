@@ -38,8 +38,10 @@ app.whenReady().then(() => {
     //console.log(pressedKeys)
     win.webContents.send('handle-keypress', pressedKeys);
   });
-  ipcMain.on('keymap-refresh', keymaps => {
-    fs.writeFileSync(path.join(__dirname, 'keymaps.json'), keymaps);
+  ipcMain.on('keymap-refresh', (e, keymaps) => {
+    fs.writeFileSync(path.join(__dirname, 'keymaps.json'), JSON.stringify(keymaps));
+    context.keymaps = keymaps;
+    win.webContents.send('context-refresh', context)
   })
   ipcMain.on('open-browser', (e, details) => {
     dialog.showOpenDialog({

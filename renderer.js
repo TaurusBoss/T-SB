@@ -10,6 +10,9 @@ window.addEventListener("DOMContentLoaded", () => {
         context = settings;
         createKeyboard(context.keyboards[context.default_keyboard]);
       });
+    ipcRenderer.on('refresh-context', (e, settings) => {
+        context = settings;
+      });
     ipcRenderer.on('handle-keypress', (e, pressedKey) => {
         handleKeyPress(pressedKey.keyName, pressedKey.down == "DOWN" ? true : false)
       });
@@ -77,9 +80,9 @@ function declareListener(id, audioFilePath) {
         fileExtension: audioFilePath.split(".").pop()
     }
     ipcRenderer.send('keymap-refresh', context.keymaps)
+
 }
 
 function handleAddSound(details) {
-    console.log(details.filePath)
-    console.log(details.keyID)
+    declareListener(details.keyID, details.filePath)
 }
