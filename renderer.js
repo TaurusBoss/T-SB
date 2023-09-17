@@ -13,8 +13,11 @@ window.addEventListener("DOMContentLoaded", () => {
     ipcRenderer.on('handle-keypress', (e, pressedKey) => {
         handleKeyPress(pressedKey.keyName, pressedKey.down == "DOWN" ? true : false)
       });
+    ipcRenderer.on('add-sound', (e, details) => {
+        handleAddSound(details)
+      });
       document.querySelector('#add-sound').addEventListener('click', function (event) {
-        handleAddSound()
+        ipcRenderer.send('open-browser', context.keymaps)
     });
 });
 
@@ -72,6 +75,6 @@ function declareListener(id, audioFilePath) {
     ipcRenderer.send('keymap-refresh', context.keymaps)
 }
 
-function handleAddSound(e) {
-    ipcRenderer.send('open-browser', context.keymaps)
+function handleAddSound(details) {
+    console.log(details.filePath)
 }

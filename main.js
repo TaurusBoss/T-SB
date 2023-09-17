@@ -51,8 +51,8 @@ app.whenReady().then(() => {
     }).then(file => {
       console.log(file.canceled)
       if (!file.canceled) {
-        console.log(file)
-        event.reply(file.filePaths[0].toString())
+        const filePath = file.filePaths[0].toString()
+        win.webContents.send('add-sound', {filePath: filePath})
       }
     })
   })
