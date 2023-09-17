@@ -1,7 +1,12 @@
 .button {
     background-color: rgb(167, 255, 251);
+    display: none;
 }
 
-button:hover {
+.button:hover {
     background-color: rgb(128, 226, 221);
+}
+
+.key-selected .button {
+    display: block;
 }
