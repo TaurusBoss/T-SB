@@ -1,8 +1,11 @@
 const { ipcRenderer } = require('electron');
+const { dialog, BrowserWindow} = require('electron');
 
 let context;
 
 window.addEventListener("DOMContentLoaded", () => {
+    const $ = require('jquery');
+    window.$ = window.jQuery = $;
     ipcRenderer.on('initialize-context', (e, settings) => {
         context = settings;
         createKeyboard(context.keyboards[context.default_keyboard]);
@@ -10,8 +13,9 @@ window.addEventListener("DOMContentLoaded", () => {
     ipcRenderer.on('handle-keypress', (e, pressedKey) => {
         handleKeyPress(pressedKey.keyName, pressedKey.down == "DOWN" ? true : false)
       });
-    const $ = require('jquery');
-    window.$ = window.jQuery = $;
+      document.querySelector('#add-sound').addEventListener('click', function (event) {
+        handleAddSound()
+    });
 });
 
 function createKeyboard(keySet) {
@@ -66,4 +70,8 @@ function declareListener(id, audioFilePath) {
         fileExtension: audioFilePath.split(".").pop()
     }
     ipcRenderer.send('keymap-refresh', context.keymaps)
+}
+
+function handleAddSound(e) {
+    ipcRenderer.send('open-browser', context.keymaps)
 }

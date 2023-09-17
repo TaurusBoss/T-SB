@@ -1,12 +1,12 @@
 const { GlobalKeyboardListener } = require("node-global-key-listener");
 const v = new GlobalKeyboardListener();
 const EventEmitter = require('events');
-const { app, BrowserWindow, Menu } = require('electron');
+const { app, BrowserWindow, Menu, dialog, ipcMain } = require('electron');
 const fs = require("fs");
 const path = require('path');
 try {
   require('electron-reloader')(module)
-} catch (_) {}
+} catch (_) { }
 let win;
 let context = {};
 
@@ -16,6 +16,7 @@ const createWindow = () => {
     height: 720,
     webPreferences: {
       nodeIntegration: true,
+      enableRemoteModule: true,
       preload: path.join(__dirname, 'renderer.js'),
     }
   });
@@ -37,10 +38,25 @@ app.whenReady().then(() => {
     //console.log(pressedKeys)
     win.webContents.send('handle-keypress', pressedKeys);
   });
-  win.webContents.on('keymap-refresh', keymaps => {
+  ipcMain.on('keymap-refresh', keymaps => {
     fs.writeFileSync(path.join(__dirname, 'keymaps.json'), keymaps);
   })
-});
+  ipcMain.on('open-browser', event => {
+    dialog.showOpenDialog({
+      defaultPath: context.sounds_dir,
+      properties: ['openFile'],
+      filters: [
+        { name: 'Audio files', extensions: ['mp3'] },
+      ]
+    }).then(file => {
+      console.log(file.canceled)
+      if (!file.canceled) {
+        console.log(file)
+        event.reply(file.filePaths[0].toString())
+      }
+    })
+  })
+})
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
@@ -53,6 +69,10 @@ async function GetSettings(settingsName) {
     const keymaps = fs.readFileSync(path.join(__dirname, 'keymaps.json'), 'utf8');
     context = JSON.parse(data)[settingsName];
     context.keymaps = JSON.parse(keymaps);
+    if (context.sounds_dir = "default") {
+      context.sounds_dir = path.join(__dirname, "/assets/sounds")
+      console.log("sound_dir setting is set to default")
+    }
   } catch (error) {
     console.error('Error reading file:', error);
   }
