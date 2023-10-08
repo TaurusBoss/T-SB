@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'">
+    <meta http-equiv="Content-Security-Policy" content="script-src 'none';">
     <link rel="stylesheet" href="./keyboard.css">
     <link rel="stylesheet" href="./layout.css">
     <title>T-BS</title>
@@ -14,6 +14,7 @@
     <div id="keymap-selection" key="none">
         <div class="button" id="add-sound">Add sound</div>
         <div id="description">No selected key.</div>
+        <div id="player"></div>
     </div>
     <div id="keyboard-container">
     </div>
