@@ -49,11 +49,16 @@ function handleKeyPress(keyName, isKeyDown) {
     } else {
       keyElement.classList.remove("highlight");
     }
+    if (isKeyDown && context.keymaps[context.default_keymap][keyName] !== undefined) {
+      audioPlayer(keyName)
+    }
   }
 }
 
-function audioPlayer(pathOfAudioFile) {
-  var audio = new Audio(pathOfAudioFile);
+function audioPlayer(id) {
+  const data = context.keymaps[context.default_keymap][id];
+  console.log(data)
+  var audio = new Audio(`${data.path}#t=${data.T_start},${data.T_end}`);
   audio.play();
 }
 
@@ -88,6 +93,12 @@ function selectKey(e) {
 }
 
 function declareListener(id, audioFilePath) {
+
+}
+
+function handleAddSound(details) {
+  const id = details.keyID
+  const audioFilePath = details.filePath
   context.keymaps[context.default_keymap][id] = {
     path: audioFilePath,
     T_start: 0,
@@ -96,11 +107,7 @@ function declareListener(id, audioFilePath) {
   }
   updatePlayer(audioFilePath, id)
   ipcRenderer.send('keymap-refresh', context.keymaps)
-
-}
-
-function handleAddSound(details) {
-  declareListener(details.keyID, details.filePath)
+  
 }
 
 function updatePlayer(path, id) {
@@ -115,6 +122,9 @@ function updatePlayer(path, id) {
   ws.on('decode', () => {
     if (context.keymaps[context.default_keymap][id].T_end == 0) {
       context.keymaps[context.default_keymap][id].T_end = ws.getDuration();
+    }
+    if (context.keymaps[context.default_keymap][id].T_start < 0) {
+      context.keymaps[context.default_keymap][id].T_start = 0;
     }
     wsRegions.addRegion({
       start: context.keymaps[context.default_keymap][id].T_start,
