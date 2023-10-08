@@ -50,7 +50,9 @@ function handleKeyPress(keyName, isKeyDown) {
       keyElement.classList.remove("highlight");
     }
     if (isKeyDown && context.keymaps[context.default_keymap][keyName] !== undefined) {
-      audioPlayer(keyName)
+      if($(`#${keyName}`).hasClass("selected")){
+        ws.plugins[0].regions[0].play()
+      } else audioPlayer(keyName)
     }
   }
 }
@@ -58,7 +60,7 @@ function handleKeyPress(keyName, isKeyDown) {
 function audioPlayer(id) {
   const data = context.keymaps[context.default_keymap][id];
   console.log(data)
-  var audio = new Audio(`${data.path}#t=${data.T_start},${data.T_end}`);
+  var audio = new Audio(`${data.path}#t=${data.T_start},${data.T_end-0.05}`);
   audio.play();
 }
 
@@ -92,10 +94,6 @@ function selectKey(e) {
   }
 }
 
-function declareListener(id, audioFilePath) {
-
-}
-
 function handleAddSound(details) {
   const id = details.keyID
   const audioFilePath = details.filePath
@@ -123,7 +121,7 @@ function updatePlayer(path, id) {
     if (context.keymaps[context.default_keymap][id].T_end == 0) {
       context.keymaps[context.default_keymap][id].T_end = ws.getDuration();
     }
-    if (context.keymaps[context.default_keymap][id].T_start < 0) {
+    if (context.keymaps[context.default_keymap][id].T_start < 0.001) {
       context.keymaps[context.default_keymap][id].T_start = 0;
     }
     wsRegions.addRegion({
@@ -133,13 +131,17 @@ function updatePlayer(path, id) {
       color: "rgba(255,255,255,0.5)",
       drag: true,
       resize: true,
+      id: 'selected-region'
     })
   })
-  ws.on('interaction', () => {
-    ws.playPause()
-  })
+  // ws.on('interaction', () => {
+  //   ws.playPause()
+  // })
   wsRegions.on("region-updated", (region) => {
     context.keymaps[context.default_keymap][id].T_start = region.start;
     context.keymaps[context.default_keymap][id].T_end = region.end;
+  })
+  wsRegions.on('region-out', (e) => {
+    ws.stop()
   })
 }
