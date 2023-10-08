@@ -1,3 +1,4 @@
+
 .button {
     background-color: rgb(167, 255, 251);
     display: none;
@@ -9,4 +10,8 @@
 
 .key-selected .button {
     display: block;
+}
+
+#keymap-selection {
+    height: 190px;
 }
