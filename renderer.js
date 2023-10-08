@@ -1,5 +1,6 @@
 const { ipcRenderer } = require('electron');
 const { dialog, BrowserWindow} = require('electron');
+const WaveSurfer = require('wavesurfer.js')
 
 let context;
 
@@ -22,6 +23,12 @@ window.addEventListener("DOMContentLoaded", () => {
       document.querySelector('#add-sound').addEventListener('click', function (event) {
         ipcRenderer.send('open-browser', {keymaps: context.keymaps, keyID: $('#keymap-selection').attr("key")})
     });
+    const wavesurfer = WaveSurfer.create({
+      container: '#player',
+      waveColor: '#4F4A85',
+      progressColor: '#383351',
+      url: 'assets/sounds/dezso.mp3'
+    })   
 });
 
 function createKeyboard(keySet) {
