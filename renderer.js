@@ -9,6 +9,7 @@ let ws;
 window.addEventListener("DOMContentLoaded", () => {
   const $ = require('jquery');
   window.$ = window.jQuery = $;
+  deviceInitialization()
   ipcRenderer.on('initialize-context', (e, settings) => {
     context = settings;
     createKeyboard(context.keyboards[context.default_keyboard]);
@@ -28,9 +29,27 @@ window.addEventListener("DOMContentLoaded", () => {
 
 });
 
+async function deviceInitialization() {
+  const devices = await navigator.mediaDevices.enumerateDevices();
+  let outputDevices = devices.filter(function (device){
+    return device.kind == 'audiooutput'
+  });
+  for (let device of outputDevices) {
+    const option = $('<option>')
+    option.text(device.label)
+    option.attr('value', device.deviceId)
+    $('#devices').append(option)
+  }
+  const audio = document.createElement("audio");
+  $('#devices').on("change", async (e) => {
+    const deviceId =  $('#devices').find(":selected").val();
+    context.output = deviceId;
+    ws.setSinkId(deviceId);
+  })
+}
+
 function createKeyboard(keySet) {
   const keyboardContainer = document.querySelector("#keyboard-container");
-  console.log(keySet)
   for (const [keyRaw, keyLabel] of Object.entries(keySet.keys)) {
     const keyElement = document.createElement("div");
     keyElement.id = keyRaw;
@@ -50,17 +69,17 @@ function handleKeyPress(keyName, isKeyDown) {
       keyElement.classList.remove("highlight");
     }
     if (isKeyDown && context.keymaps[context.default_keymap][keyName] !== undefined) {
-      if($(`#${keyName}`).hasClass("selected")){
+      if ($(`#${keyName}`).hasClass("selected")) {
         ws.plugins[0].regions[0].play()
       } else audioPlayer(keyName)
     }
   }
 }
 
-function audioPlayer(id) {
+async function audioPlayer(id) {
   const data = context.keymaps[context.default_keymap][id];
-  console.log(data)
-  var audio = new Audio(`${data.path}#t=${data.T_start},${data.T_end-0.05}`);
+  let audio = new Audio(`${data.path}#t=${data.T_start},${data.T_end - 0.05}`);
+  await audio.setSinkId(context.output)
   audio.play();
 }
 
@@ -85,7 +104,6 @@ function selectKey(e) {
     $("#keymap-selection").toggleClass("key-selected", true);
     $("#description").html(`Key: ${e.target.innerText}<br>ID: ${id}`)
   }
-  console.log(context.keymaps[context.default_keymap])
   if (context.keymaps[context.default_keymap][id] !== undefined) {
     updatePlayer(context.keymaps[context.default_keymap][id].path, id)
   }
@@ -105,7 +123,7 @@ function handleAddSound(details) {
   }
   updatePlayer(audioFilePath, id)
   ipcRenderer.send('keymap-refresh', context.keymaps)
-  
+
 }
 
 function updatePlayer(path, id) {
@@ -115,8 +133,9 @@ function updatePlayer(path, id) {
     progressColor: '#383351',
     url: path
   })
+  ws.setSinkId(context.output);
   const wsRegions = ws.registerPlugin(RegionsPlugin.create())
-  
+
   ws.on('decode', () => {
     if (context.keymaps[context.default_keymap][id].T_end == 0) {
       context.keymaps[context.default_keymap][id].T_end = ws.getDuration();
@@ -128,9 +147,10 @@ function updatePlayer(path, id) {
       start: context.keymaps[context.default_keymap][id].T_start,
       end: context.keymaps[context.default_keymap][id].T_end,
       content: 'Region to play',
-      color: "rgba(255,255,255,0.5)",
+      color: "rgba(135,206,235,0.5)",
       drag: true,
       resize: true,
+      minLength: 0.1,
       id: 'selected-region'
     })
   })
