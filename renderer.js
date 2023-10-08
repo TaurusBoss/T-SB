@@ -1,7 +1,7 @@
 const { ipcRenderer } = require('electron');
 const { dialog, BrowserWindow } = require('electron');
 const WaveSurfer = require('wavesurfer.js')
-const Regions = require('wavesurfer.js/plugins/regions')
+const RegionsPlugin = require('wavesurfer.js/plugins/regions')
 
 let context;
 let ws;
@@ -80,7 +80,7 @@ function selectKey(e) {
   }
   console.log(context.keymaps[context.default_keymap])
   if (context.keymaps[context.default_keymap][id] !== undefined) {
-    updatePlayer(context.keymaps[context.default_keymap][id].path)
+    updatePlayer(context.keymaps[context.default_keymap][id].path, id)
   }
   else if (ws !== undefined) {
     ws.destroy();
@@ -94,7 +94,7 @@ function declareListener(id, audioFilePath) {
     T_end: 0,
     fileExtension: audioFilePath.split(".").pop()
   }
-  updatePlayer(audioFilePath)
+  updatePlayer(audioFilePath, id)
   ipcRenderer.send('keymap-refresh', context.keymaps)
 
 }
@@ -103,14 +103,33 @@ function handleAddSound(details) {
   declareListener(details.keyID, details.filePath)
 }
 
-function updatePlayer(path) {
+function updatePlayer(path, id) {
   ws = WaveSurfer.create({
     container: '#player',
     waveColor: '#4F4A85',
     progressColor: '#383351',
     url: path
   })
+  const wsRegions = ws.registerPlugin(RegionsPlugin.create())
+  
+  ws.on('decode', () => {
+    if (context.keymaps[context.default_keymap][id].T_end == 0) {
+      context.keymaps[context.default_keymap][id].T_end = ws.getDuration();
+    }
+    wsRegions.addRegion({
+      start: context.keymaps[context.default_keymap][id].T_start,
+      end: context.keymaps[context.default_keymap][id].T_end,
+      content: 'Region to play',
+      color: "rgba(255,255,255,0.5)",
+      drag: true,
+      resize: true,
+    })
+  })
   ws.on('interaction', () => {
     ws.playPause()
+  })
+  wsRegions.on("region-updated", (region) => {
+    context.keymaps[context.default_keymap][id].T_start = region.start;
+    context.keymaps[context.default_keymap][id].T_end = region.end;
   })
 }
