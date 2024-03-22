@@ -31,7 +31,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
 async function deviceInitialization() {
   const devices = await navigator.mediaDevices.enumerateDevices();
-  let outputDevices = devices.filter(function (device){
+  let outputDevices = devices.filter(function (device) {
     return device.kind == 'audiooutput'
   });
   for (let device of outputDevices) {
@@ -42,21 +42,30 @@ async function deviceInitialization() {
   }
   const audio = document.createElement("audio");
   $('#devices').on("change", async (e) => {
-    const deviceId =  $('#devices').find(":selected").val();
+    const deviceId = $('#devices').find(":selected").val();
     context.output = deviceId;
     ws.setSinkId(deviceId);
   })
 }
 
 function createKeyboard(keySet) {
-  const keyboardContainer = document.querySelector("#keyboard-container");
-  for (const [keyRaw, keyLabel] of Object.entries(keySet.keys)) {
-    const keyElement = document.createElement("div");
-    keyElement.id = keyRaw;
-    keyElement.className = "key";
-    keyElement.textContent = keyLabel;
-    keyElement.onclick = selectKey;
-    keyboardContainer.appendChild(keyElement);
+  const keyboardContainer = $("#keyboard-container");
+  for (const [stage, rows] of Object.entries(keySet.keys)) {
+    for (const row of rows) {
+      const newLine = $('<br>');
+      for (const [keyRaw, keyLabel] of Object.entries(row)) {
+        const keyElement = $("<div>");
+        $(keyElement).attr('id', keyRaw);
+        $(keyElement).addClass('key key-' + stage);
+        $(keyElement).text(keyLabel);
+        $(keyElement).on('click', function(e) {
+          selectKey(e);
+        })
+        $(keyboardContainer).append(keyElement);
+        
+      }
+      $(keyboardContainer).append($(newLine));
+    }
   }
 }
 
