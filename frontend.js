@@ -136,6 +136,7 @@ function selectKey(e) {
     $("#description").html(`Key: ${e.target.innerText}<br>ID: ${id}`)
   }
   if (context.keymaps[context.default_keymap][id] !== undefined) {
+    $('#player').html('');
     updatePlayer(context.keymaps[context.default_keymap][id].path, id)
   }
   else if (ws !== undefined) {
