@@ -113,6 +113,8 @@ function layoutListInitialization(layouts) {
 function createKeyboard(keySet) {
   const keyboardContainer = $("#keyboard-container");
   for (const [stage, rows] of Object.entries(keySet.keys)) {
+    const stageContainer = $(`<div>`);
+    $(stageContainer).attr('id', stage + '-subcontainer');
     for (const row of rows) {
       const newLine = $('<br>');
       for (const [keyRaw, keyLabel] of Object.entries(row)) {
@@ -123,11 +125,12 @@ function createKeyboard(keySet) {
         $(keyElement).on('click', function(e) {
           selectKey(e);
         })
-        $(keyboardContainer).append(keyElement);
+        $(stageContainer).append(keyElement);
         
       }
-      $(keyboardContainer).append($(newLine));
+      $(stageContainer).append($(newLine));
     }
+    $(keyboardContainer).append(stageContainer);
   }
 }
 
