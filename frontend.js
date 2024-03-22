@@ -12,12 +12,7 @@ window.addEventListener("DOMContentLoaded", () => {
   deviceInitialization()
   ipcRenderer.on('initialize-context', (e, settings) => {
     context = settings;
-    createKeyboard(context.keyboards[context.default_keyboard]);
-    soundMapInitialization(context.keymaps);
-    layoutListInitialization(context.keyboards);
-    $('#save-soundmap').on('click', function(){
-      ipcRenderer.send('keymap-refresh', context.keymaps);
-    });
+    initSystem();
   });
   ipcRenderer.on('refresh-context', (e, settings) => {
     context = settings;
@@ -33,7 +28,43 @@ window.addEventListener("DOMContentLoaded", () => {
   });
 
 });
-
+function initSystem() {
+  createKeyboard(context.keyboards[context.default_keyboard]);
+  soundMapInitialization(context.keymaps);
+  layoutListInitialization(context.keyboards);
+  $('#save-soundmap').on('click', function(){
+      ipcRenderer.send('keymap-refresh', context.keymaps);
+  });
+  $('#add-soundmap').on('click', function() {
+    $(this).hide();
+    $('#new-soundmap-name').show();
+    $('#create-soundmap').show();
+  });
+  $('#create-soundmap').on('click', createSoundMap);
+}
+function createSoundMap() {
+  
+  let soundMapName = $('#new-soundmap-name').val();
+  if (!context.keymaps[soundMapName]) {
+    context.keymaps[soundMapName] = {};
+    soundMapInitialization(context.keymaps);
+    $('#save-soundmap').trigger('click');
+    $('#new-soundmap-name').toggleClass('error', false);
+    $('#new-soundmap-name').val('');
+    $('#new-soundmap-name').text('');
+    //Reset tools to original state
+    $('#new-soundmap-name').hide();
+    $('#create-soundmap').hide();
+    $('#add-soundmap').show();
+    $('#new-soundmap-name').attr('placeholder', 'Soundmap name');
+  }
+  else {
+    $('#new-soundmap-name').val('');
+    $('#new-soundmap-name').text('');
+    $('#new-soundmap-name').attr('placeholder', 'Already exists...');
+    $('#new-soundmap-name').toggleClass('error', true);
+  }
+}
 async function deviceInitialization() {
   const devices = await navigator.mediaDevices.enumerateDevices();
   let outputDevices = devices.filter(function (device) {
@@ -53,6 +84,7 @@ async function deviceInitialization() {
   })
 }
 function soundMapInitialization(soundMaps) {
+  $('#soundmaps').html('');
   for (const map of Object.keys(soundMaps)) {
     const option = $('<option>');
     $(option).text(map);
@@ -62,6 +94,7 @@ function soundMapInitialization(soundMaps) {
 }
 
 function layoutListInitialization(layouts) {
+  $('#layouts').html('');
   for (const layout of Object.keys(layouts)) {
     const option = $('<option>');
     $(option).text(layout);

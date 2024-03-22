@@ -18,3 +18,11 @@
 #keymap-selection {
     height: 190px;
 }
+
+.hide {
+    display: none;
+}
+
+input.error {
+    background-color: rgb(255, 150, 150);
+}
