@@ -12,12 +12,16 @@ let context = {};
 
 const createWindow = () => {
   win = new BrowserWindow({
+    minWidth: 1280,
+    minHeight: 720,
+    resizable: true,
     webPreferences: {
       nodeIntegration: true,
       enableRemoteModule: true,
       preload: path.join(__dirname, 'frontend.js')
     }    
   });
+  win.maximize();
   win.loadFile('keyboard.html');
 }
 
