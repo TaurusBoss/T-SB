@@ -40,7 +40,7 @@ app.whenReady().then(() => {
     win.webContents.send('handle-keypress', pressedKeys);
   });
   ipcMain.on('keymap-refresh', (e, keymaps) => {
-    //fs.writeFileSync(path.join(__dirname, 'keymaps.json'), JSON.stringify(keymaps));
+    fs.writeFileSync(path.join(__dirname, 'keymaps.json'), JSON.stringify(keymaps));
     context.keymaps = keymaps;
     win.webContents.send('refresh-context', context)
   })

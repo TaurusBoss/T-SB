@@ -15,6 +15,9 @@ window.addEventListener("DOMContentLoaded", () => {
     createKeyboard(context.keyboards[context.default_keyboard]);
     soundMapInitialization(context.keymaps);
     layoutListInitialization(context.keyboards);
+    $('#save-soundmap').on('click', function(){
+      ipcRenderer.send('keymap-refresh', context.keymaps);
+    });
   });
   ipcRenderer.on('refresh-context', (e, settings) => {
     context = settings;
