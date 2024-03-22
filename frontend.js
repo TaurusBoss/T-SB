@@ -5,6 +5,7 @@ const RegionsPlugin = require('wavesurfer.js/plugins/regions')
 
 let context;
 let ws;
+let audio = new Audio();
 
 window.addEventListener("DOMContentLoaded", () => {
   const $ = require('jquery');
@@ -140,15 +141,21 @@ function handleKeyPress(keyName, isKeyDown) {
     }
     if (isKeyDown && context.keymaps[context.selected_keymap][keyName] !== undefined) {
       if ($(`#${keyName}`).hasClass("selected")) {
-        ws.plugins[0].regions[0].play()
-      } else audioPlayer(keyName)
+        if (!ws.isPlaying()){
+          ws.plugins[0].regions[0].play()
+        }
+        else ws.pause();
+      } 
+      else if(audio.paused) audioPlayer(keyName);
+      else audio.pause();
+
     }
   }
 }
 
 async function audioPlayer(id) {
   const data = context.keymaps[context.selected_keymap][id];
-  let audio = new Audio(`${data.path}#t=${data.T_start},${data.T_end - 0.05}`);
+  audio = new Audio(`${data.path}#t=${data.T_start},${data.T_end - 0.05}`);
   await audio.setSinkId(context.output)
   audio.play();
 }
