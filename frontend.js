@@ -32,6 +32,12 @@ function initSystem() {
   createKeyboard(context.keyboards[context.default_keyboard]);
   soundMapInitialization(context.keymaps);
   layoutListInitialization(context.keyboards);
+  context.selected_keymap = context.default_keymap;
+  $('#soundmaps').on('change', function(){
+    context.selected_keymap = $(this).val();
+    $('.key.selected').removeClass('selected');
+    resetPlayer()
+  })
   $('#save-soundmap').on('click', function(){
       ipcRenderer.send('keymap-refresh', context.keymaps);
   });
@@ -88,7 +94,7 @@ function soundMapInitialization(soundMaps) {
   for (const map of Object.keys(soundMaps)) {
     const option = $('<option>');
     $(option).text(map);
-    $(option).val(`map-${map}`);
+    $(option).val(`${map}`);
     $('#soundmaps').append(option)
   }
 }
@@ -98,7 +104,7 @@ function layoutListInitialization(layouts) {
   for (const layout of Object.keys(layouts)) {
     const option = $('<option>');
     $(option).text(layout);
-    $(option).val(`layout-${layout}`);
+    $(option).val(`${layout}`);
     $('#layouts').append(option)
   }
 }
@@ -132,7 +138,7 @@ function handleKeyPress(keyName, isKeyDown) {
     } else {
       keyElement.classList.remove("highlight");
     }
-    if (isKeyDown && context.keymaps[context.default_keymap][keyName] !== undefined) {
+    if (isKeyDown && context.keymaps[context.selected_keymap][keyName] !== undefined) {
       if ($(`#${keyName}`).hasClass("selected")) {
         ws.plugins[0].regions[0].play()
       } else audioPlayer(keyName)
@@ -141,10 +147,19 @@ function handleKeyPress(keyName, isKeyDown) {
 }
 
 async function audioPlayer(id) {
-  const data = context.keymaps[context.default_keymap][id];
+  const data = context.keymaps[context.selected_keymap][id];
   let audio = new Audio(`${data.path}#t=${data.T_start},${data.T_end - 0.05}`);
   await audio.setSinkId(context.output)
   audio.play();
+}
+
+function resetPlayer() {
+  $("#keymap-selection").attr("key", "none")
+  $("#keymap-selection").toggleClass("key-selected", false);
+  $("#description").html("No selected key.")
+  if (ws !== undefined) {
+    ws.destroy();
+  }
 }
 
 function selectKey(e) {
@@ -152,12 +167,7 @@ function selectKey(e) {
   //Client clicks on an already selected key.
   if ($(`#${id}`).hasClass("selected")) {
     $(`#${id}`).removeClass("selected");
-    $("#keymap-selection").attr("key", "none")
-    $("#keymap-selection").toggleClass("key-selected", false);
-    $("#description").html("No selected key.")
-    if (ws !== undefined) {
-      ws.destroy();
-    }
+    resetPlayer();
     id = null;
   }
   //Client clicks on a key not selected ATM.
@@ -168,9 +178,9 @@ function selectKey(e) {
     $("#keymap-selection").toggleClass("key-selected", true);
     $("#description").html(`Key: ${e.target.innerText}<br>ID: ${id}`)
   }
-  if (context.keymaps[context.default_keymap][id] !== undefined) {
+  if (context.keymaps[context.selected_keymap][id] !== undefined) {
     $('#player').html('');
-    updatePlayer(context.keymaps[context.default_keymap][id].path, id)
+    updatePlayer(context.keymaps[context.selected_keymap][id].path, id)
   }
   else if (ws !== undefined) {
     ws.destroy();
@@ -180,7 +190,7 @@ function selectKey(e) {
 function handleAddSound(details) {
   const id = details.keyID
   const audioFilePath = details.filePath
-  context.keymaps[context.default_keymap][id] = {
+  context.keymaps[context.selected_keymap][id] = {
     path: audioFilePath,
     T_start: 0,
     T_end: 0,
@@ -202,15 +212,15 @@ function updatePlayer(path, id) {
   const wsRegions = ws.registerPlugin(RegionsPlugin.create())
 
   ws.on('decode', () => {
-    if (context.keymaps[context.default_keymap][id].T_end == 0) {
-      context.keymaps[context.default_keymap][id].T_end = ws.getDuration();
+    if (context.keymaps[context.selected_keymap][id].T_end == 0) {
+      context.keymaps[context.selected_keymap][id].T_end = ws.getDuration();
     }
-    if (context.keymaps[context.default_keymap][id].T_start < 0.001) {
-      context.keymaps[context.default_keymap][id].T_start = 0;
+    if (context.keymaps[context.selected_keymap][id].T_start < 0.001) {
+      context.keymaps[context.selected_keymap][id].T_start = 0;
     }
     wsRegions.addRegion({
-      start: context.keymaps[context.default_keymap][id].T_start,
-      end: context.keymaps[context.default_keymap][id].T_end,
+      start: context.keymaps[context.selected_keymap][id].T_start,
+      end: context.keymaps[context.selected_keymap][id].T_end,
       content: 'Region to play',
       color: "rgba(135,206,235,0.5)",
       drag: true,
@@ -223,8 +233,8 @@ function updatePlayer(path, id) {
   //   ws.playPause()
   // })
   wsRegions.on("region-updated", (region) => {
-    context.keymaps[context.default_keymap][id].T_start = region.start;
-    context.keymaps[context.default_keymap][id].T_end = region.end;
+    context.keymaps[context.selected_keymap][id].T_start = region.start;
+    context.keymaps[context.selected_keymap][id].T_end = region.end;
   })
   wsRegions.on('region-out', (e) => {
     ws.stop()
