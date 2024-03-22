@@ -2,7 +2,7 @@
   "name": "t-sb-electron",
   "version": "1.0.0",
   "description": "soundboard",
-  "main": "main.js",
+  "main": "backend.js",
   "scripts": {
     "test": "test",
     "start": "electron ."

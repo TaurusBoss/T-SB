@@ -12,15 +12,12 @@ let context = {};
 
 const createWindow = () => {
   win = new BrowserWindow({
-    width: 1200,
-    height: 720,
     webPreferences: {
       nodeIntegration: true,
       enableRemoteModule: true,
-      preload: path.join(__dirname, 'renderer.js')
-    }
+      preload: path.join(__dirname, 'frontend.js')
+    }    
   });
-
   win.loadFile('keyboard.html');
 }
 
