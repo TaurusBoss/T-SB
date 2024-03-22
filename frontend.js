@@ -13,6 +13,8 @@ window.addEventListener("DOMContentLoaded", () => {
   ipcRenderer.on('initialize-context', (e, settings) => {
     context = settings;
     createKeyboard(context.keyboards[context.default_keyboard]);
+    soundMapInitialization(context.keymaps);
+    layoutListInitialization(context.keyboards);
   });
   ipcRenderer.on('refresh-context', (e, settings) => {
     context = settings;
@@ -46,6 +48,23 @@ async function deviceInitialization() {
     context.output = deviceId;
     ws.setSinkId(deviceId);
   })
+}
+function soundMapInitialization(soundMaps) {
+  for (const map of Object.keys(soundMaps)) {
+    const option = $('<option>');
+    $(option).text(map);
+    $(option).val(`map-${map}`);
+    $('#soundmaps').append(option)
+  }
+}
+
+function layoutListInitialization(layouts) {
+  for (const layout of Object.keys(layouts)) {
+    const option = $('<option>');
+    $(option).text(layout);
+    $(option).val(`layout-${layout}`);
+    $('#layouts').append(option)
+  }
 }
 
 function createKeyboard(keySet) {
