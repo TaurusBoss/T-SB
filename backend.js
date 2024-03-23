@@ -29,7 +29,7 @@ app.whenReady().then(() => {
   createWindow();
   const menu = Menu.buildFromTemplate(menuTemplate())
   Menu.setApplicationMenu(menu)
-  GetSettings("default")
+  GetSettings()
   win.webContents.send('initialize-context', context);
   // Listen for global keyboard events
   v.addListener((e, down) => {
@@ -39,6 +39,11 @@ app.whenReady().then(() => {
     //console.log(pressedKeys)
     win.webContents.send('handle-keypress', pressedKeys);
   });
+  ipcMain.on('settings-refresh', (e, data) => {
+    delete data.keymaps;
+    let settings = {default: data}
+    fs.writeFileSync(path.join(__dirname, 'appsettings.json'), JSON.stringify(settings));
+  })
   ipcMain.on('keymap-refresh', (e, keymaps) => {
     fs.writeFileSync(path.join(__dirname, 'keymaps.json'), JSON.stringify(keymaps));
     context.keymaps = keymaps;
@@ -65,11 +70,11 @@ app.on('window-all-closed', () => {
 });
 
 
-async function GetSettings(settingsName) {
+async function GetSettings() {
   try {
     const data = fs.readFileSync(path.join(__dirname, 'appsettings.json'), 'utf8');
     const keymaps = fs.readFileSync(path.join(__dirname, 'keymaps.json'), 'utf8');
-    context = JSON.parse(data)[settingsName];
+    context = JSON.parse(data)['default'];
     context.keymaps = JSON.parse(keymaps);
     if (context.sounds_dir = "default") {
       context.sounds_dir = path.join(__dirname, "/assets/sounds")

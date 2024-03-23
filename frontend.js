@@ -79,15 +79,22 @@ async function deviceInitialization() {
   });
   for (let device of outputDevices) {
     const option = $('<option>')
-    option.text(device.label)
-    option.attr('value', device.deviceId)
+    $(option).text(device.label)
+    $(option).attr('value', device.deviceId)
+    $(option).attr('id', 'device-' + device.deviceId)
     $('#devices').append(option)
+  }
+  if ($(`#device-${context.output}`)){
+    $('#devices').val(context.output);
   }
   const audio = document.createElement("audio");
   $('#devices').on("change", async (e) => {
     const deviceId = $('#devices').find(":selected").val();
     context.output = deviceId;
-    ws.setSinkId(deviceId);
+    if(ws){
+      ws.setSinkId(deviceId);
+    }
+    ipcRenderer.send('settings-refresh', context);
   })
 }
 function soundMapInitialization(soundMaps) {
