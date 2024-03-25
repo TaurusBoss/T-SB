@@ -77,6 +77,7 @@ async function deviceInitialization() {
   let outputDevices = devices.filter(function (device) {
     return device.kind == 'audiooutput'
   });
+  let defDeviceFound = false;
   for (let device of outputDevices) {
     const option = $('<option>')
     $(option).text(device.label)
@@ -86,8 +87,12 @@ async function deviceInitialization() {
   }
   if ($(`#device-${context.output}`)){
     $('#devices').val(context.output);
+    defDeviceFound = true;
   }
-  const audio = document.createElement("audio");
+  if (!defDeviceFound) {
+    context.output = $('#devices').find(":selected").val();
+  }
+  audio = document.createElement("audio");
   $('#devices').on("change", async (e) => {
     const deviceId = $('#devices').find(":selected").val();
     context.output = deviceId;
