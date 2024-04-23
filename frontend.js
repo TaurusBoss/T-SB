@@ -4,7 +4,7 @@ const WaveSurfer = require('wavesurfer.js')
 const RegionsPlugin = require('wavesurfer.js/plugins/regions')
 
 let context;
-let ws;
+let wsBlock = {};
 let audio = new Audio();
 
 window.addEventListener("DOMContentLoaded", () => {
@@ -33,11 +33,12 @@ function initSystem() {
   createKeyboard(context.keyboards[context.default_keyboard]);
   soundMapInitialization(context.keymaps);
   layoutListInitialization(context.keyboards);
+  wsPlayerInitialization(context.keymaps[context.default_keymap]);
   context.selected_keymap = context.default_keymap;
   $('#soundmaps').on('change', function(){
     context.selected_keymap = $(this).val();
     $('.key.selected').removeClass('selected');
-    resetPlayer()
+    resetPlayer('none')
   })
   $('#save-soundmap').on('click', function(){
       ipcRenderer.send('keymap-refresh', context.keymaps);
@@ -96,9 +97,9 @@ async function deviceInitialization() {
   $('#devices').on("change", async (e) => {
     const deviceId = $('#devices').find(":selected").val();
     context.output = deviceId;
-    if(ws){
-      ws.setSinkId(deviceId);
-    }
+    // if(ws){
+    //   ws.setSinkId(deviceId);
+    // }
     ipcRenderer.send('settings-refresh', context);
   })
 }
@@ -119,6 +120,12 @@ function layoutListInitialization(layouts) {
     $(option).text(layout);
     $(option).val(`${layout}`);
     $('#layouts').append(option)
+  }
+}
+
+function wsPlayerInitialization(keymap) { 
+  for (const key of Object.entries(keymap)) {
+    addWsPlayer(key[1].path, key[0]);
   }
 }
 
@@ -148,40 +155,27 @@ function createKeyboard(keySet) {
 
 function handleKeyPress(keyName, isKeyDown) {
   const keyElement = document.getElementById(keyName);
+  const ws = wsBlock[keyName];
   if (keyElement) {
     if (isKeyDown) {
       keyElement.classList.add("highlight");
+      if (!ws.isPlaying()){
+        ws.plugins[0].regions[0].play();
+      }
+      else ws.pause();
     } else {
       keyElement.classList.remove("highlight");
     }
-    if (isKeyDown && context.keymaps[context.selected_keymap][keyName] !== undefined) {
-      if ($(`#${keyName}`).hasClass("selected")) {
-        if (!ws.isPlaying()){
-          ws.plugins[0].regions[0].play()
-        }
-        else ws.pause();
-      } 
-      else if(audio.paused) audioPlayer(keyName);
-      else audio.pause();
-
-    }
+    
   }
 }
 
-async function audioPlayer(id) {
-  const data = context.keymaps[context.selected_keymap][id];
-  audio = new Audio(`${data.path}#t=${data.T_start},${data.T_end - 0.05}`);
-  await audio.setSinkId(context.output)
-  audio.play();
-}
-
-function resetPlayer() {
+function resetPlayer(id) {
   $("#keymap-selection").attr("key", "none")
   $("#keymap-selection").toggleClass("key-selected", false);
   $("#description").html("No selected key.")
-  if (ws !== undefined) {
-    ws.destroy();
-  }
+  $('#ws-player-' + id).hide();
+  $('#ws-player-' + id).removeClass('displaying');
 }
 
 function selectKey(e) {
@@ -189,7 +183,7 @@ function selectKey(e) {
   //Client clicks on an already selected key.
   if ($(`#${id}`).hasClass("selected")) {
     $(`#${id}`).removeClass("selected");
-    resetPlayer();
+    resetPlayer(id);
     id = null;
   }
   //Client clicks on a key not selected ATM.
@@ -201,11 +195,12 @@ function selectKey(e) {
     $("#description").html(`Key: ${e.target.innerText}<br>ID: ${id}`)
   }
   if (context.keymaps[context.selected_keymap][id] !== undefined) {
-    $('#player').html('');
-    updatePlayer(context.keymaps[context.selected_keymap][id].path, id)
+    $('.displaying').hide();
+    $('#ws-player-' + id).show();
+    $('#ws-player-' + id).addClass('displaying');
   }
-  else if (ws !== undefined) {
-    ws.destroy();
+  else if (wsBlock[id] !== undefined) {
+    wsBlock[id].destroy();
   }
 }
 
@@ -218,24 +213,26 @@ function handleAddSound(details) {
     T_end: 0,
     fileExtension: audioFilePath.split(".").pop()
   }
-  updatePlayer(audioFilePath, id)
+  addWsPlayer(audioFilePath, id)
   ipcRenderer.send('keymap-refresh', context.keymaps)
 
 }
 
-function updatePlayer(path, id) {
-  ws = WaveSurfer.create({
+function addWsPlayer(path, id) {
+  let ws = WaveSurfer.create({
     container: '#player',
     waveColor: '#4F4A85',
     progressColor: '#383351',
     url: path
   })
-  ws.setSinkId(context.output);
-  const wsRegions = ws.registerPlugin(RegionsPlugin.create())
+  wsBlock[id] = ws;
+  wsBlock[id].setSinkId(context.output);
+  $('#player').find('div:last').attr('id', 'ws-player-' + id).hide();
+  const wsRegions = wsBlock[id].registerPlugin(RegionsPlugin.create())
 
-  ws.on('decode', () => {
+  wsBlock[id].on('decode', () => {
     if (context.keymaps[context.selected_keymap][id].T_end == 0) {
-      context.keymaps[context.selected_keymap][id].T_end = ws.getDuration();
+      context.keymaps[context.selected_keymap][id].T_end = wsBlock[id].getDuration();
     }
     if (context.keymaps[context.selected_keymap][id].T_start < 0.001) {
       context.keymaps[context.selected_keymap][id].T_start = 0;
@@ -259,6 +256,6 @@ function updatePlayer(path, id) {
     context.keymaps[context.selected_keymap][id].T_end = region.end;
   })
   wsRegions.on('region-out', (e) => {
-    ws.stop()
+    wsBlock[id].stop()
   })
 }
